@@ -184,27 +184,29 @@ public class ActivitiController {
      */
     @GetMapping(value = "/viewImage", produces = MediaType.IMAGE_PNG_VALUE)
     @ResponseBody
-    public byte[] test1(String processDefinitionId) throws Exception {
-        //根据流程定义id来获取BpmnModel对象 流程定义ID my_process:1:7
-        BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinitionId);
-        //这个类在5.22.0往上的版本中才有(用于画流程图)
-        DefaultProcessDiagramGenerator diagramGenerator = new DefaultProcessDiagramGenerator();
+    public byte[] getFlowImgByInstanceId(String processInstanceId) throws IOException {
+        // 获取历史流程实例
+        HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
+                .processInstanceId(processInstanceId).singleResult();
 
 
-        //得到已经走过的节点的id集合
-        List<HistoricActivityInstance> historicActivityInstanceList = historyService.createHistoricActivityInstanceQuery()
-                .processInstanceId("4").list();
-        //已进行的任务（包括当前正在进行的）
-        List<String> executedActivityIdList = historicActivityInstanceList.stream()
+        // 获取流程中已经执行的节点，按照执行先后顺序排序
+        List<HistoricActivityInstance> historicActivityInstances = historyService.createHistoricActivityInstanceQuery()
+                .processInstanceId(processInstanceId)
+                .orderByHistoricActivityInstanceId().asc().list();
+
+        // 高亮已经执行流程节点ID集合
+        List<String> executedActivityIdList = historicActivityInstances.stream()
                 .map(HistoricActivityInstance::getActivityId)
                 .collect(Collectors.toList());
-        //已执行的线
-        List<String> executedFlowIdList = executedFlowIdList(historicActivityInstanceList, bpmnModel);
-        /**
-         * 绘制bpmnModel代表的流程的流程图
-         * 这个list表示要高亮显示的节点的id集合,也就是流程图中每一个任务的id
-         */
-        InputStream inputStream = diagramGenerator.generateDiagram(bpmnModel, "png", executedActivityIdList, executedFlowIdList, "宋体", "宋体", "宋体", null, 1.0);
+
+        ProcessDiagramGenerator processDiagramGenerator = new CustomProcessDiagramGenerator();
+
+        BpmnModel bpmnModel = repositoryService.getBpmnModel(historicProcessInstance.getProcessDefinitionId());
+        // 高亮流程已发生流转的线id集合
+        List<String> highLightedFlowIds = executedFlowIdList(historicActivityInstances, bpmnModel);
+        // 使用默认配置获得流程图表生成器，并生成追踪图片字符流
+        InputStream inputStream = processDiagramGenerator.generateDiagram(bpmnModel, "png", executedActivityIdList, highLightedFlowIds, "宋体", "微软雅黑", "黑体", null, 2.0);
         byte[] bytes = new byte[inputStream.available()];
         inputStream.read(bytes, 0, inputStream.available());
         return bytes;
@@ -235,49 +237,13 @@ public class ActivitiController {
     }
 
 
-    @GetMapping(value = "/viewImage1", produces = MediaType.IMAGE_PNG_VALUE)
-    @ResponseBody
-    public byte[] getFlowImgByInstanceId(String processInstanceId) throws IOException {
-        // 获取历史流程实例
-        HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
-                .processInstanceId(processInstanceId).singleResult();
-
-        //获取当前节点
-        //List<String> activeActivityIds = runtimeService.getActiveActivityIds(executionId);
-
-        // 获取流程中已经执行的节点，按照执行先后顺序排序
-        List<HistoricActivityInstance> historicActivityInstances = historyService.createHistoricActivityInstanceQuery()
-                .processInstanceId(processInstanceId)
-                .orderByHistoricActivityInstanceId().asc().list();
-
-        // 高亮已经执行流程节点ID集合
-        List<String> executedActivityIdList = historicActivityInstances.stream()
-                .map(HistoricActivityInstance::getActivityId)
-                .collect(Collectors.toList());
-
-        List<HistoricProcessInstance> historicFinishedProcessInstances = historyService.createHistoricProcessInstanceQuery()
-                .processInstanceId(processInstanceId).finished()
-                .list();
-        ProcessDiagramGenerator processDiagramGenerator = new CustomProcessDiagramGenerator();
-        // 如果还没完成，流程图高亮颜色为绿色，如果已经完成为红色
-//        if (!CollectionUtils.isEmpty(historicFinishedProcessInstances)) {
-//            // 如果不为空，说明已经完成
-//            processDiagramGenerator = new CustomProcessDiagramGenerator();
-//        } else {
-//            processDiagramGenerator = new DefaultProcessDiagramGenerator();
-//        }
-
-        BpmnModel bpmnModel = repositoryService.getBpmnModel(historicProcessInstance.getProcessDefinitionId());
-        // 高亮流程已发生流转的线id集合
-        List<String> highLightedFlowIds = executedFlowIdList(historicActivityInstances, bpmnModel);
-        // 使用默认配置获得流程图表生成器，并生成追踪图片字符流
-        InputStream inputStream = processDiagramGenerator.generateDiagram(bpmnModel, "png", executedActivityIdList, highLightedFlowIds, "宋体", "微软雅黑", "黑体", null, 2.0);
-        byte[] bytes = new byte[inputStream.available()];
-        inputStream.read(bytes, 0, inputStream.available());
-        return bytes;
-    }
-
-
+    /**
+     * 自定义画流程图类后的查看流程图方法
+     *
+     * @param processInstanceId
+     * @param response
+     * @throws Exception
+     */
     @GetMapping("/view")
     @ResponseBody
     public void processTracking(String processInstanceId, HttpServletResponse response) throws Exception {
