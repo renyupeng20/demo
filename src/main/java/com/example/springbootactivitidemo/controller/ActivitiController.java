@@ -64,7 +64,11 @@ public class ActivitiController {
             editorNode.put("resourceId", "canvas");
             ObjectNode stencilSetNode = objectMapper.createObjectNode();
             stencilSetNode.put("namespace", "http://b3mn.org/stencilset/bpmn2.0#");
-            editorNode.put("stencilset", stencilSetNode);
+            editorNode.putPOJO("stencilset", stencilSetNode);
+            ObjectNode properties = objectMapper.createObjectNode();
+            properties.put("process_id", key);
+            properties.put("name", name);
+            editorNode.set("properties", properties);
             Model modelData = repositoryService.newModel();
 
             ObjectNode modelObjectNode = objectMapper.createObjectNode();
