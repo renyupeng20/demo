@@ -14,14 +14,13 @@ package com.example.springbootactivitidemo.util;
  * limitations under the License.
  */
 
+import org.activiti.bpmn.model.Process;
 import org.activiti.bpmn.model.*;
 import org.activiti.image.ProcessDiagramGenerator;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.*;
-
-import org.activiti.bpmn.model.Process;
 
 /**
  * Class to generate an image based the diagram interchange information in a BPMN 2.0 process.

@@ -1,9 +1,8 @@
 package com.example.springbootactivitidemo.util;
 
-import org.activiti.bpmn.model.*;
 import org.activiti.bpmn.model.Process;
+import org.activiti.bpmn.model.*;
 import org.activiti.image.impl.DefaultProcessDiagramGenerator;
-import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.imageio.ImageIO;

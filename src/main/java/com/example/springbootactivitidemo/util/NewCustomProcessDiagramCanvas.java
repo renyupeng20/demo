@@ -1,10 +1,13 @@
 package com.example.springbootactivitidemo.util;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Paint;
-import java.awt.RenderingHints;
-import java.awt.Stroke;
+import org.activiti.bpmn.model.AssociationDirection;
+import org.activiti.bpmn.model.GraphicInfo;
+import org.activiti.image.exception.ActivitiImageException;
+import org.activiti.image.impl.DefaultProcessDiagramCanvas;
+import org.activiti.image.util.ReflectUtil;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
 import java.awt.font.TextAttribute;
@@ -16,14 +19,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
-
-import javax.imageio.ImageIO;
-
-import org.activiti.bpmn.model.AssociationDirection;
-import org.activiti.bpmn.model.GraphicInfo;
-import org.activiti.image.exception.ActivitiImageException;
-import org.activiti.image.impl.DefaultProcessDiagramCanvas;
-import org.activiti.image.util.ReflectUtil;
 
 public class NewCustomProcessDiagramCanvas extends DefaultProcessDiagramCanvas {
 
